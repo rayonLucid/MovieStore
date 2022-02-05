@@ -1,0 +1,89 @@
+﻿@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="text-center">
+    <div class=" ">
+
+
+        <h2 class="text-center"><b>Customers</b></h2>
+        <br />
+        <div class="container-fluid">
+
+            <div class="col-xs-12 col-md-12">
+                <div class="panel panel-default" style="margin:0 auto">
+                    <div class="modal-header bg-warning" style="padding:2em 2em;margin-bottom:2em">
+                        @Html.DropDownList("ddlCountries", new SelectList(ViewBag.vCountries, "ID", "Name"), new { @class = "form-control col-md-4", onchange = "GetStores()" })
+
+                    </div>
+                    <div class="modal-body">
+                        <div><label id="lblError" style="color:red"></label></div>
+                        <div class="row">
+                            <div class="col-md-6 table-responsive">
+                                <table id="tblStores" class="table table-hover">
+                                    <thead class="bg-warning" style="color:black">
+                                        <tr>
+                                            <th>Location</th>
+                                            <th>Available Movies</th>
+                                            <th></th>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+
+
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+    function GetStores() {
+        let CountryCode = document.getElementById("ddlCountries").value
+        $.ajax({
+
+            url: `../Home/GetSTores?CountryCode=${CountryCode}`,
+            type: 'POST',
+            data: "",
+            contenttype: 'application/json; charset=utf-8',
+            datatype: 'json',
+            contenttype: false,
+            processdata: false,
+            success: function (data) {
+
+            let Result =    JSON.stringify(data)
+               // alert(Result)
+                $("#tblStores").DataTable().destroy();
+                $("#tblStores").DataTable({
+                    "data": data,
+                    "columns": [
+                        { "data": "location" },
+                        { "data": "AvailableMovies" },
+                        {
+                            "data": function (row, d, index) {
+                                let Editbutton = `<a class='btn btn-primary' id='btnEdit' style='color:white'>Edit</a>`
+                                return Editbutton
+                            }
+                        },
+
+                    ],
+
+                });
+            }
+            , error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                alert(errorThrown);
+                return;
+            }
+        });
+
+      //  document.demoForm.submit();
+    }
+</script>

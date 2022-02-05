@@ -1,0 +1,196 @@
+﻿@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="text-center">
+    <div class=" ">
+
+
+        <h2 class="text-center"><b>Customers</b></h2>
+        <br />
+        <div class="container-fluid">
+
+            <div class="col-xs-12 col-md-12">
+                <div class="panel panel-default" style="margin:0 auto">
+                    <div class="modal-header bg-warning" style="padding:2em 2em;margin-bottom:2em">
+                        @Html.DropDownList("ddlStores", new SelectList(ViewBag.vStores, "ID", "location"), new { @class = "form-control col-md-4", onchange = "GetCustomers()" })
+
+                    </div>
+                    <form id="MainForm">
+                        <div class="modal-body">
+                            <div><label id="lblError" style="color:red"></label></div>
+
+                            <div class="row">
+                                <div class="col-md-6 table-responsive">
+                                    <table id="tblStores" class="table table-hover">
+                                        <thead class="bg-warning" style="color:black">
+                                            <tr>
+                                                <th>First Name</th>
+                                                <th>Last Name</th>
+                                                <th>Active</th>
+                                                <th>Movies Rented</th>
+                                                <th></th>
+                                                <th></th>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="row" style="margin:1em 1em">
+                                        <label class="col-md-4">First Name</label>
+                                        <input class="form-control col-md-6" id="firstName" />
+                                    </div>
+                                    <div class="row" style="margin:1em 1em">
+                                        <label class="col-md-4">Last Name</label>
+                                        <input class="form-control col-md-6" id="lastName" />
+                                    </div>
+                                    <div class="row" style="margin:1em 1em">
+                                        <label class="col-md-4">Movies Rented</label>
+                                        <input type="number" class=" form-control col-md-6" id="moviesRented" />
+                                    </div>
+                                    
+                                    <div class="row" style="margin:1em 1em">
+                                        <label class="col-md-4">Store ID</label>
+                                        @Html.DropDownList("ddlStoreID", new SelectList(ViewBag.vStores, "ID", "location"), new { @class = "form-control col-md-6" })
+                                    </div>
+                                    <div class="row" style="margin:1em 1em">
+                                        <label class="col-md-4">Is Active</label>
+                                        <input type="checkbox" class=" form-check-input col-md-8" id="Active" style="transform:scale(2)" />
+                                    </div>
+
+                                    <div class="row" style="margin:1em 1em">
+                                        <div class="col-md-6"></div>
+                                        <button type="button" class="btn btn-primary btn-outline-dark" onclick="SaveForm()"> Save</button>
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <input type="hidden" id="customerid" />
+
+        </div>
+
+    </div>
+</div>
+<script type="text/javascript">
+
+
+    function SaveForm() {
+        var Data = {
+          ID:  document.getElementById("customerid").value ,
+            MoviesRented: document.getElementById("moviesRented").value ,
+            LastName :   document.getElementById("lastName").value ,
+            FirstName: document.getElementById("firstName").value ,
+            Active: document.getElementById("Active").checked,
+            StoreID: document.getElementById("ddlStoreID").value
+        }
+
+        $.ajax({
+
+            url: `../Home/SaveCustomers`,
+            type: 'POST',
+            data: Data,
+            contenttype: 'application/json; charset=utf-8',
+            datatype: 'json',
+            contenttype: false,
+            processdata: false,
+            success: function (data) {
+
+                let Result = JSON.stringify(data)
+
+                if (data) {
+                    alert("Record Saved Successfully")
+                    GetCustomers()
+                }
+
+
+            }
+            , error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                alert(errorThrown);
+                return;
+            }
+        });
+    }
+    function GetCustomers() {
+        let StoreCode = document.getElementById("ddlStores").value
+       
+        $.ajax({
+
+            url: `../Home/GetCustomers?StoreCode=${StoreCode}`,
+            type: 'POST',
+            data: "",
+            contenttype: 'application/json; charset=utf-8',
+            datatype: 'json',
+            contenttype: false,
+            processdata: false,
+            success: function (data) {
+                localStorage.setItem("data", JSON.stringify(data))
+            let Result =    JSON.stringify(data)
+              
+                $("#tblStores").DataTable().destroy();
+                $("#tblStores").DataTable({
+                    "data": JSON.parse(localStorage.getItem("data")),
+                    "columns": [
+                        { "data": "firstName" },
+                        { "data": "lastName" },
+                        { "data": "active" },
+                        { "data": "moviesRented" },
+                        {
+                            "data": function (row, d, index) {
+                                let Editbutton = `<a class='btn btn-primary' id='btnEdit' style='color:white'>Edit</a>`
+                                return Editbutton
+                            }
+                        },
+                        {
+                            "data": function (row, d, index) {
+                                let Deletebutton = `<a class='btn btn-danger' id='btnDelete' style='color:white'>Delete</a>`
+                                return Deletebutton
+                            }
+                        }
+
+                    ],
+
+                });
+
+
+
+            }
+            , error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                alert(errorThrown);
+                return;
+            }
+        });
+        $("#tblStores").on("click", "#btnEdit", function (e) {
+            var row = $(this).parents('tr')[0];
+            var data = $("#tblStores").DataTable().row(row).data();
+            var customerid = data["id"]
+            
+            document.getElementById("customerid").value = customerid
+            document.getElementById("moviesRented").value = data["moviesRented"]
+            document.getElementById("lastName").value = data["lastName"] 
+            document.getElementById("firstName").value = data["firstName"] 
+            document.getElementById("Active").checked = data["active"] 
+            document.getElementById("ddlStoreID").value = data["storeID"]
+        })
+
+        $("#tblStores").on("click", "#btnDelete", function (e) {
+            var row = $(this).parents('tr')[0];
+            var data = $("#tblStores").DataTable().row(row).data();
+            var customerid = data["id"]
+            var Result = confirm("Would you like to delete this Record?")
+            if (Result) {
+                
+            }
+
+        })
+      //  document.demoForm.submit();
+    }
+</script>
